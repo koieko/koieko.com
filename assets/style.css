@@ -1,7 +1,7 @@
 /* =========================================================
    鯉江 昂 — Portfolio  共通スタイル（全ページ統一）
    紙色(#f7f5f0) / 黒文字(#1a1814) / 細いセピアのアクセント。
-   ダークでも常にライト固定。フォントは Noto Sans JP / Shippori Mincho。
+   ダークでも常にライト固定。フォントは DM Sans / Shippori Mincho。
    ========================================================= */
 :root{
   --paper:#f7f5f0;
@@ -11,7 +11,7 @@
   --sepia:#6f5a42;
   --reveal-bg:#efe7d7;
   --reveal-ink:#3a3024;
-  --display:'Shippori Mincho','Noto Serif JP',serif;
+  --display:'Shippori Mincho','Noto Sans JP',serif;
   color-scheme:light;
 }
 *{margin:0;padding:0;box-sizing:border-box}
@@ -19,7 +19,7 @@ html{scroll-behavior:smooth;color-scheme:light;}
 body{
   background:var(--paper);
   color:var(--ink);
-  font-family:'Noto Sans JP',sans-serif;
+  font-family:'DM Sans','Noto Sans JP',sans-serif;
   font-weight:300;line-height:2;font-size:15px;letter-spacing:.04em;
   -webkit-font-smoothing:antialiased;
   min-height:100vh;
@@ -41,28 +41,21 @@ a{color:inherit;text-decoration:none;}
 @media(max-width:640px){.wrap{padding:0 24px;}}
 
 /* ---- ローディング（「鯉」を丸で囲む・円を一周描く／装飾ゼロ） ---- */
-#loader{position:fixed;inset:0;z-index:200;background:var(--paper);display:flex;flex-direction:column;align-items:center;justify-content:center;transition:opacity .8s cubic-bezier(.2,.7,.2,1),visibility .8s;}
+#loader{position:fixed;inset:0;z-index:200;background:var(--paper);display:flex;align-items:center;justify-content:center;transition:opacity .8s cubic-bezier(.2,.7,.2,1),visibility .8s;}
 #loader.done{opacity:0;visibility:hidden;}
 #loader .ld{position:relative;width:128px;height:128px;display:flex;align-items:center;justify-content:center;}
 .ld-ring{position:absolute;inset:0;width:100%;height:100%;transform:rotate(-90deg);overflow:visible;}
-.ld-ring circle{fill:none;stroke:var(--ink);stroke-width:1.3;stroke-linecap:round;stroke-dasharray:289;stroke-dashoffset:289;animation:ldraw 1.9s .1s cubic-bezier(.45,.05,.3,1) forwards;}
+.ld-ring circle{fill:none;stroke:var(--ink);stroke-width:1.3;stroke-linecap:round;stroke-dasharray:289;stroke-dashoffset:289;animation:ldraw .95s .1s cubic-bezier(.65,0,.35,1) forwards;}
 @keyframes ldraw{to{stroke-dashoffset:0;}}
-.ld-kanji{font-family:var(--display);font-size:2.7rem;font-weight:500;color:var(--ink);opacity:0;transform:scale(.94);animation:ldkanji .8s 1.2s cubic-bezier(.2,.7,.2,1) forwards;}
+.ld-kanji{font-family:var(--display);font-size:2.7rem;font-weight:500;color:var(--ink);opacity:0;transform:scale(.94);animation:ldkanji .8s .45s cubic-bezier(.2,.7,.2,1) forwards;}
 @keyframes ldkanji{to{opacity:1;transform:none;}}
-/* スマホ傾き許可の案内＋OK（iOS未許可のときだけ JS が挿入） */
-.ld-ask{margin-top:36px;max-width:300px;padding:0 24px;text-align:center;opacity:0;transform:translateY(10px);transition:opacity .6s ease,transform .6s cubic-bezier(.2,.7,.2,1);}
-.ld-ask.show{opacity:1;transform:none;}
-.ld-ask-txt{font-size:.82rem;font-weight:300;line-height:1.95;letter-spacing:.04em;color:var(--ink2);margin-bottom:20px;}
-.ld-ask-ok{font-family:inherit;font-size:.78rem;font-weight:400;letter-spacing:.12em;text-transform:uppercase;color:var(--paper);background:var(--ink);border:none;border-radius:2px;padding:12px 44px;cursor:pointer;transition:opacity .2s;}
-.ld-ask-ok:hover{opacity:.8;}
-.ld-ask-ok:disabled{opacity:.45;cursor:default;}
 body.loading{overflow:hidden;}
 
 /* ---- 共通ヘッダー（鯉○ロゴ＋Home/Work/Blog/About me） ---- */
 nav{position:fixed;top:0;left:0;right:0;z-index:100;padding:16px 48px;display:flex;justify-content:space-between;align-items:center;border-bottom:.5px solid var(--line);background:rgba(247,245,240,.85);backdrop-filter:blur(12px);}
 .brand{display:inline-flex;align-items:center;color:var(--ink);}
 .brand-mark{display:inline-flex;width:40px;height:40px;}
-.brand-mark svg,.brand-mark img{width:100%;height:100%;display:block;user-select:none;-webkit-user-select:none;-webkit-user-drag:none;pointer-events:none;}
+.brand-mark svg{width:100%;height:100%;display:block;}
 .lk{display:flex;gap:30px;list-style:none;}
 .lk a{font-size:12px;font-weight:300;letter-spacing:.08em;text-transform:uppercase;color:var(--ink2);transition:color .2s;}
 .lk a:hover,.lk a.cur{color:var(--ink);}
@@ -83,9 +76,6 @@ nav{position:fixed;top:0;left:0;right:0;z-index:100;padding:16px 48px;display:fl
 .btn-link{font-size:12px;font-weight:300;letter-spacing:.06em;text-transform:uppercase;color:var(--ink2);transition:color .2s;}
 .btn-link:hover{color:var(--ink);}
 .chameleon-bg{position:absolute;right:-4%;bottom:-6%;width:64%;max-width:none;opacity:.3;mix-blend-mode:multiply;-webkit-mask-image:linear-gradient(to right,transparent 0%,#000 38%);mask-image:linear-gradient(to right,transparent 0%,#000 38%);animation:fadeCham 1.4s .3s both;pointer-events:none;}
-/* ヒーロー：目を白く抜いたカメレオン＋瞳（黒丸）を重ね、傾き/マウスに追従させる */
-.chameleon-bg .cham-base{display:block;width:100%;height:auto;}
-.chameleon-bg .cham-pupil{position:absolute;left:52.6%;top:28.8%;width:4.4%;aspect-ratio:1/1;border-radius:50%;background:var(--ink);transform:translate(-50%,-50%);will-change:transform;}
 @keyframes fadeUp{from{opacity:0;transform:translateY(16px);}to{opacity:1;transform:none;}}
 @keyframes fadeCham{from{opacity:0;}to{opacity:.3;}}
 /* 中間幅（タブレット〜小型PC）：画像が文字に被らないよう小さく・右へ寄せ、薄く */
@@ -134,7 +124,7 @@ nav{position:fixed;top:0;left:0;right:0;z-index:100;padding:16px 48px;display:fl
 .work.hide{display:none;}
 .work-inner{display:grid;grid-template-columns:88px 1fr;gap:36px;align-items:start;position:relative;z-index:2;}
 .work .no{font-family:var(--display);font-size:3rem;font-weight:400;line-height:1;letter-spacing:-.02em;transition:opacity .5s;}
-.work .no small{display:block;font-family:'Noto Sans JP',sans-serif;font-size:.68rem;font-weight:500;color:var(--ink2);letter-spacing:.1em;margin-top:10px;}
+.work .no small{display:block;font-family:'DM Sans',sans-serif;font-size:.68rem;font-weight:500;color:var(--ink2);letter-spacing:.1em;margin-top:10px;}
 .work h3{font-family:var(--display);font-size:clamp(1.2rem,2.6vw,1.6rem);font-weight:500;line-height:1.45;margin-bottom:10px;}
 .work .client{font-size:.84rem;color:var(--ink2);margin-bottom:18px;}
 .work .desc{color:#46423c;font-size:.93rem;line-height:1.95;max-width:600px;margin-bottom:16px;}
@@ -192,10 +182,6 @@ nav{position:fixed;top:0;left:0;right:0;z-index:100;padding:16px 48px;display:fl
 .prof-row .prof{flex:1;}
 .prof p{font-size:clamp(1rem,2vw,1.18rem);font-weight:300;line-height:2.05;max-width:720px;}
 .avatar{width:132px;height:132px;flex-shrink:0;border-radius:50%;object-fit:cover;filter:grayscale(100%) contrast(1.02);mix-blend-mode:multiply;opacity:.92;}
-/* 傾き/マウスで表情を切り替えるアバター（クロスフェード） */
-.avatar-cham{position:relative;overflow:hidden;}
-.avatar-cham .av-layer{position:absolute;inset:0;width:100%;height:100%;object-fit:cover;opacity:0;transition:opacity .5s ease;}
-.avatar-cham .av-layer.is-on{opacity:1;}
 @media(max-width:640px){.prof-row{flex-direction:column-reverse;align-items:flex-start;gap:26px;}.avatar{width:96px;height:96px;}}
 
 /* ---- 経歴タイムライン ---- */
