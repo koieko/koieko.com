@@ -1,0 +1,16 @@
+# 公開対象外（作業用・参照用ファイル）
+_archive/
+_serve_lan.cjs
+_eye_zoom*.png
+*.Zone.Identifier
+*:Zone.Identifier
+
+# Claude / 作業メモ
+CLAUDE.md
+CLAUDE_CODE_指示書.md
+.claude/
+
+# OS / エディタ
+.DS_Store
+Thumbs.db
+*.swp
