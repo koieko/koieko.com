@@ -32,11 +32,8 @@
         if(best)best.classList.toggle('peek',peeking);
       });
     }
-    const needPerm=typeof DeviceOrientationEvent!=='undefined'&&typeof DeviceOrientationEvent.requestPermission==='function';
-    if(needPerm){
-      const ask=()=>{DeviceOrientationEvent.requestPermission().then(s=>{if(s==='granted')enableTilt();}).catch(()=>{});document.removeEventListener('touchend',ask);};
-      document.addEventListener('touchend',ask,{once:true});
-    }else{enableTilt();}
+    // 許可は site.js が全ページ共通で先取りしている（他ページのタッチで取得済みなら即・未取得ならこのページの最初のタッチで解決）
+    (window.tiltPermission||Promise.resolve('granted')).then(s=>{if(s==='granted')enableTilt();});
   }
 
   // フィルター
