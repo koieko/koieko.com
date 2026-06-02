@@ -85,7 +85,7 @@ nav{position:fixed;top:0;left:0;right:0;z-index:100;padding:16px 48px;display:fl
 .chameleon-bg{position:absolute;right:-4%;bottom:-6%;width:64%;max-width:none;opacity:.3;mix-blend-mode:multiply;-webkit-mask-image:linear-gradient(to right,transparent 0%,#000 38%);mask-image:linear-gradient(to right,transparent 0%,#000 38%);animation:fadeCham 1.4s .3s both;pointer-events:none;}
 /* ヒーロー：目を白く抜いたカメレオン＋瞳（黒丸）を重ね、傾き/マウスに追従させる */
 .chameleon-bg .cham-base{display:block;width:100%;height:auto;}
-.chameleon-bg .cham-pupil{position:absolute;left:52.6%;top:28.8%;width:4.4%;aspect-ratio:1/1;border-radius:50%;background:var(--ink);transform:translate(-50%,-50%);will-change:transform;}
+.chameleon-bg .cham-pupil{position:absolute;left:52.6%;top:28.8%;width:2.2%;aspect-ratio:1/1;border-radius:50%;background:var(--ink);transform:translate(-50%,-50%);will-change:transform;}
 @keyframes fadeUp{from{opacity:0;transform:translateY(16px);}to{opacity:1;transform:none;}}
 @keyframes fadeCham{from{opacity:0;}to{opacity:.3;}}
 /* 中間幅（タブレット〜小型PC）：画像が文字に被らないよう小さく・右へ寄せ、薄く */
@@ -188,8 +188,8 @@ nav{position:fixed;top:0;left:0;right:0;z-index:100;padding:16px 48px;display:fl
 @media(max-width:640px){.skills-grid{grid-template-columns:1fr;gap:32px;}}
 
 /* ---- プロフィール＋アバター ---- */
-.prof-row{display:flex;gap:48px;align-items:center;border-top:1px solid var(--line);padding-top:46px;}
-.prof-row .prof{flex:1;}
+.prof-row{display:flex;gap:32px;align-items:center;border-top:1px solid var(--line);padding-top:46px;}
+.prof-row .prof{flex:0 1 auto;}
 .prof p{font-size:clamp(1rem,2vw,1.18rem);font-weight:300;line-height:2.05;max-width:720px;}
 .avatar{width:132px;height:132px;flex-shrink:0;border-radius:50%;object-fit:cover;filter:grayscale(100%) contrast(1.02);mix-blend-mode:multiply;opacity:.92;}
 /* 傾き/マウスで表情を切り替えるアバター（クロスフェード） */

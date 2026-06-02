@@ -41,7 +41,7 @@
     if(!showPrompt){ setTimeout(finish,260); return; }
     const box=document.createElement('div');
     box.className='ld-ask';
-    box.innerHTML='<p class="ld-ask-txt">このサイトでは、スマートフォンを傾けると一部の表示が変化します。</p><button type="button" class="ld-ask-ok">OK</button>';
+    box.innerHTML='<p class="ld-ask-txt">このサイトでは、スマートフォンを傾けると<br>一部の表示が変化します。</p><button type="button" class="ld-ask-ok">OK</button>';
     l.appendChild(box);
     requestAnimationFrame(()=>box.classList.add('show'));
     box.querySelector('.ld-ask-ok').addEventListener('click',function(){
@@ -103,8 +103,8 @@
 })();
 
 /* ---- About me（info.html）：アバターのカメレオンが傾き/マウスで表情切替 ----
-   通常=profile_camereon.jpg / 傾き小(10-25)=a / 傾き大(25-)=b /
-   反対方向=c・d。PC はマウス X 座標で左→中央→右に応じて変化。クロスフェード。
+   デフォルト=a。スマホは傾き小=a / 弱く傾ける=b / 大きく傾ける=c（左右どちらでも）。
+   PC はデフォルト a、マウスオーバーで b。クロスフェードで切り替える。
    .avatar-cham のレイヤ構造があるときだけ動く（画像は事前デコードでちらつき防止）。 */
 (function(){
   const box=document.querySelector('.avatar-cham');
@@ -123,18 +123,19 @@
     layers[key].classList.add('is-on');
     current=key;
   };
-  show('neutral');
+  show('a');
 
+  // 傾き量で a(基準)→b(弱く傾ける)→c(大きく傾ける)。左右どちらの向きでも同じ。
   const fromGamma=g=>{
     const a=Math.abs(g);
-    if(a<10) return 'neutral';
-    if(g>0) return a<25 ? 'a' : 'b';   // 一方向に傾ける
-    return a<25 ? 'c' : 'd';           // 反対方向に傾ける
+    if(a<10) return 'a';
+    if(a<25) return 'b';
+    return 'c';
   };
 
   const fine=window.matchMedia('(hover:hover) and (pointer:fine)').matches;
-  let ticking=false;
   if(!fine){
+    let ticking=false;
     (window.tiltPermission||Promise.resolve('granted')).then(s=>{
       if(s!=='granted')return;
       window.addEventListener('deviceorientation',e=>{
@@ -143,16 +144,9 @@
       });
     });
   }else{
-    window.addEventListener('mousemove',e=>{
-      if(ticking)return;ticking=true;
-      requestAnimationFrame(()=>{
-        ticking=false;
-        const r=e.clientX/Math.max(1,window.innerWidth);
-        let k='neutral';
-        if(r<0.2)k='d'; else if(r<0.4)k='c'; else if(r<0.6)k='neutral'; else if(r<0.8)k='a'; else k='b';
-        show(k);
-      });
-    });
+    // PC：デフォルト a、マウスオーバーで b
+    box.addEventListener('mouseenter',()=>show('b'));
+    box.addEventListener('mouseleave',()=>show('a'));
   }
 })();
 
