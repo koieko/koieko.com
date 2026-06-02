@@ -1,22 +1,156 @@
-/* 全ページ共通：ローディング（「鯉」を丸で囲む。円が一周描き終わったら少し待ってフェードアウト）
-   TOPの初回・下層への遷移時を含め、毎回かならず一瞬表示する。 */
+/* =========================================================
+   鯉江 昂 — Portfolio  全ページ共通スクリプト
+   ========================================================= */
+
+/* ---- ローディング（鯉○）＋ 端末の傾き許可取得 ----------------------
+   ・円を約1.9秒かけてゆっくり一周描く → 鯉を表示
+   ・iOS 等（requestPermission が必要）で未許可のときだけ、円の下に
+     案内文＋OK ボタンをふわっと表示する
+   ・OK で DeviceOrientationEvent.requestPermission() を実行し、応答後に
+     ローディングをフェードアウト
+   ・PC / Android / 許可済み は案内を出さず、アニメーション後にそのまま閉じる
+   ・許可結果は window.tiltPermission（Promise）と sessionStorage で
+     全ページ・work.js・ヒーロー切替に共有する
+   ・全ページに #loader があるため、TOP 初回も下層遷移も毎回表示される */
 (function(){
+  const D=window.DeviceOrientationEvent;
+  const needPerm=typeof D!=='undefined'&&typeof D.requestPermission==='function';
+  let already=false; try{already=sessionStorage.getItem('tiltGranted')==='1';}catch(e){}
+
+  // 傾きを使う側（work.js / ヒーロー）が参照する共有 Promise
+  let resolveTilt;
+  window.tiltPermission=new Promise(r=>{resolveTilt=r;});
+  const grant=s=>{ if(s==='granted'){try{sessionStorage.setItem('tiltGranted','1');}catch(e){}} resolveTilt(s); };
+  if(!needPerm) grant('granted');            // Android 等は許可不要
+  else if(already) grant('granted');          // 前ページで取得済み
+
   const l=document.getElementById('loader');
-  if(!l)return;
+  if(!l) return;
   let done=false;
   const finish=()=>{
     if(done)return;done=true;
     l.classList.add('done');
     document.body.classList.remove('loading');
-    setTimeout(()=>l.remove(),850);
+    setTimeout(()=>{ if(l.parentNode)l.remove(); },850);
   };
+
+  // iOS で未許可のときだけ、案内＋OK を出してそこで許可を取る
+  const showPrompt = needPerm && !already;
+
+  const afterRing=()=>{
+    if(!showPrompt){ setTimeout(finish,260); return; }
+    const box=document.createElement('div');
+    box.className='ld-ask';
+    box.innerHTML='<p class="ld-ask-txt">このサイトでは、スマートフォンを傾けると<br>一部の表示が変化します。</p><button type="button" class="ld-ask-ok">OK</button>';
+    l.appendChild(box);
+    requestAnimationFrame(()=>box.classList.add('show'));
+    box.querySelector('.ld-ask-ok').addEventListener('click',function(){
+      this.disabled=true;
+      Promise.resolve().then(()=>D.requestPermission())
+        .then(grant).catch(()=>grant('denied'))
+        .then(finish,finish);
+    },{once:true});
+  };
+
   const ring=l.querySelector('.ld-ring circle');
-  if(ring){ring.addEventListener('animationend',()=>setTimeout(finish,250),{once:true});}
-  // 保険：2.4秒で必ず閉じる
-  setTimeout(finish,2400);
+  if(ring) ring.addEventListener('animationend',afterRing,{once:true});
+  else afterRing();
+  // 保険：案内を出さないケースのみ自動クローズ（案内表示時は OK 待ち）
+  if(!showPrompt) setTimeout(finish,4200);
 })();
 
-/* Contact：メールアドレスのアンカーをクリックでクリップボードにコピー */
+/* ---- TOP ヒーロー：カメレオンの瞳が訪問者を追う ----
+   メインコピー「360°の目でユーザーを読み〜」の体現。画像切替はしない。
+   目を白く塗った chameleon_noeyes.jpg の上に、CSS の黒丸（.cham-pupil）を
+   重ね、スマホは傾き(gamma/beta)／PC はマウス位置に応じて瞳を少し動かす。
+   index.html に .chameleon-bg > .cham-pupil があるときだけ動く。
+   動きは小さく・なめらかに（さりげなく）。 */
+(function(){
+  const box=document.querySelector('.chameleon-bg');
+  if(!box) return;
+  const pupil=box.querySelector('.cham-pupil');
+  if(!pupil) return;
+
+  // 目標位置(tx,ty)へ現在値(cx,cy)を毎フレーム近づける。範囲は -1〜1。
+  let tx=0,ty=0,cx=0,cy=0;
+  const loop=()=>{
+    cx+=(tx-cx)*0.09; cy+=(ty-cy)*0.09;
+    const r=box.getBoundingClientRect();
+    const m=r.width*0.028;            // 可動量＝画像幅の約2.8%（瞳が目から出ない範囲）
+    pupil.style.transform='translate(calc(-50% + '+(cx*m).toFixed(2)+'px), calc(-50% + '+(cy*m).toFixed(2)+'px))';
+    requestAnimationFrame(loop);
+  };
+  requestAnimationFrame(loop);
+
+  const clamp=v=>Math.max(-1,Math.min(1,v));
+  const fine=window.matchMedia('(hover:hover) and (pointer:fine)').matches;
+  if(fine){
+    // PC：マウス位置（中央=0、端=±1）
+    window.addEventListener('mousemove',e=>{
+      tx=clamp(e.clientX/Math.max(1,innerWidth)*2-1);
+      ty=clamp(e.clientY/Math.max(1,innerHeight)*2-1);
+    });
+  }else{
+    // スマホ：端末の傾き（許可は上のローディングで取得済み）
+    (window.tiltPermission||Promise.resolve('granted')).then(s=>{
+      if(s!=='granted')return;
+      window.addEventListener('deviceorientation',e=>{
+        tx=clamp((e.gamma||0)/35);        // 左右の傾き
+        ty=clamp(((e.beta||0)-40)/35);    // 前後の傾き（持つ角度40°を中立に）
+      });
+    });
+  }
+})();
+
+/* ---- About me（info.html）：アバターのカメレオンが傾き/マウスで表情切替 ----
+   デフォルト=a。スマホは傾き小=a / 弱く傾ける=b / 大きく傾ける=c（左右どちらでも）。
+   PC はデフォルト a、マウスオーバーで b。クロスフェードで切り替える。
+   .avatar-cham のレイヤ構造があるときだけ動く（画像は事前デコードでちらつき防止）。 */
+(function(){
+  const box=document.querySelector('.avatar-cham');
+  if(!box) return;
+  const layerEls=box.querySelectorAll('.av-layer');
+  if(!layerEls.length) return;
+
+  const layers={};
+  layerEls.forEach(im=>{layers[im.dataset.tilt]=im;});
+  layerEls.forEach(im=>{ const p=new Image(); p.src=im.currentSrc||im.src; });  // preload
+
+  let current=null;
+  const show=key=>{
+    if(!layers[key]||current===key)return;
+    layerEls.forEach(im=>im.classList.remove('is-on'));
+    layers[key].classList.add('is-on');
+    current=key;
+  };
+  show('a');
+
+  // 傾き量で a(基準)→b(弱く傾ける)→c(大きく傾ける)。左右どちらの向きでも同じ。
+  const fromGamma=g=>{
+    const a=Math.abs(g);
+    if(a<10) return 'a';
+    if(a<25) return 'b';
+    return 'c';
+  };
+
+  const fine=window.matchMedia('(hover:hover) and (pointer:fine)').matches;
+  if(!fine){
+    let ticking=false;
+    (window.tiltPermission||Promise.resolve('granted')).then(s=>{
+      if(s!=='granted')return;
+      window.addEventListener('deviceorientation',e=>{
+        if(ticking)return;ticking=true;
+        requestAnimationFrame(()=>{ticking=false;show(fromGamma(e.gamma||0));});
+      });
+    });
+  }else{
+    // PC：デフォルト a、マウスオーバーで b
+    box.addEventListener('mouseenter',()=>show('b'));
+    box.addEventListener('mouseleave',()=>show('a'));
+  }
+})();
+
+/* ---- Contact：メールアドレスのアンカーをクリックでクリップボードにコピー ---- */
 (function(){
   const mails=document.querySelectorAll('.copy-mail');
   if(!mails.length)return;
