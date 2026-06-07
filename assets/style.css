@@ -69,7 +69,7 @@ nav{position:fixed;top:0;left:0;right:0;z-index:100;padding:16px 48px;display:fl
 @media(max-width:640px){nav{padding:13px 22px;}.brand-mark{width:36px;height:36px;}.lk{gap:16px;}.lk a{font-size:11px;letter-spacing:.05em;}}
 
 /* ---- ページ共通の上部余白（固定ナビ分） ---- */
-.page-top{padding-top:128px;}
+.page-top{padding-top:72px;}
 
 /* ---- ヒーロー（TOP：左テキスト／右に画像を背景的に溶け込ませる） ---- */
 .hero{min-height:100vh;position:relative;overflow:hidden;display:flex;align-items:flex-end;}
