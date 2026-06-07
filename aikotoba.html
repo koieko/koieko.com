@@ -36,6 +36,7 @@ body {
 .ut-cham-wrap {
   width: 100%;
   flex: 1;
+  max-height: 50vh;
   min-height: 0;
   display: flex;
   align-items: center;
@@ -45,6 +46,7 @@ body {
     linear-gradient(rgba(0,255,0,0.25) 1px, transparent 1px),
     linear-gradient(90deg, rgba(0,255,0,0.25) 1px, transparent 1px);
   background-size: 120px 100px;
+  background-position: 60px 50px;
 }
 .ut-cham {
   max-height: 38vh;
@@ -53,6 +55,7 @@ body {
   height: auto;
   object-fit: contain;
   opacity: 0;
+  mix-blend-mode: screen;
   transition: opacity 0.3s ease;
   pointer-events: none;
 }
@@ -248,22 +251,66 @@ body {
     document.getElementById('passInput').focus();
   }
 
-  const otherTexts = {
-    FIGHT: ['そんなことをしたらページが消えてしまう。','まだやるのか。'],
-    ITEM:  ['持ち物：アイデア（使いかけ）、コーヒー。','合言葉は持ち物の中にはない。'],
-  };
-  const otherIdx = {FIGHT:0, ITEM:0};
+  const fightTexts = ['そんなことをしたらページが消えてしまう。','まだやるのか。'];
+  let fightIdx = 0;
+  let itemMode = false;
+  let selectedItem = 0;
+
+  function setItemChoices() {
+    itemMode = true;
+    selectedItem = 0;
+    document.getElementById('dinner').innerHTML =
+      '<div class="ut-choices">' +
+        '<div class="ut-choice selected" id="it0" onclick="clickItem(0)">' +
+          '<span class="heart">❤</span><span>❋ 使いかけのアイデア</span>' +
+        '</div>' +
+        '<div class="ut-choice" id="it1" onclick="clickItem(1)">' +
+          '<span class="heart">❤</span><span>❋ しおり</span>' +
+        '</div>' +
+      '</div>';
+  }
+
+  function selectItem(idx) {
+    selectedItem = idx;
+    document.querySelectorAll('.ut-choice').forEach((el,i) => {
+      el.classList.toggle('selected', i===idx);
+    });
+  }
+
+  function clickItem(idx) {
+    selectItem(idx);
+    setTimeout(() => useItem(idx), 100);
+  }
+
+  function useItem(idx) {
+    itemMode = false;
+    if (idx === 0) {
+      setPlain('使いかけのアイデア を 使った。\n合言葉を 知っていれば\n秘密の世界へ 移動できる。');
+    } else {
+      setPlain('しおり を 使おうとした。\n……まだ 読み始めたばかりだ。\n今は 使えそうにない。');
+    }
+  }
 
   function doOther(action) {
     document.querySelectorAll('.ut-btn').forEach(b => b.classList.remove('active'));
     hideInputRow();
+    itemMode = false;
+
+    if (action === 'ITEM') {
+      document.getElementById('btnItem').classList.add('active');
+      setItemChoices();
+      return;
+    }
+
     if (frozen) { setPlain('......\nカメロンはもうこちらを見ていない。'); return; }
-    ignores++;
-    const msgs = otherTexts[action];
-    const idx = Math.min(otherIdx[action], msgs.length-1);
-    otherIdx[action]++;
-    if (ignores===1) { setPlain(msgs[idx]); }
-    else { frozen=true; setPlain('......\nカメロンは本のページをめくった。\nもうこちらを見ていない。'); }
+
+    if (action === 'FIGHT') {
+      ignores++;
+      const msg = fightTexts[Math.min(fightIdx, fightTexts.length-1)];
+      fightIdx++;
+      if (ignores===1) { setPlain(msg); }
+      else { frozen=true; setPlain('......\nカメロンは本のページをめくった。\nもうこちらを見ていない。'); }
+    }
   }
 
   function doMercy() {
@@ -294,6 +341,11 @@ body {
     if (mercyMode) {
       if (e.key==='ArrowUp' || e.key==='ArrowDown') { e.preventDefault(); selectChoice((selectedChoice+1)%2); }
       if (e.key==='Enter' || e.key==='z' || e.key==='Z') { e.preventDefault(); confirmChoice(); }
+      return;
+    }
+    if (itemMode) {
+      if (e.key==='ArrowUp' || e.key==='ArrowDown') { e.preventDefault(); selectItem((selectedItem+1)%2); }
+      if (e.key==='Enter' || e.key==='z' || e.key==='Z') { e.preventDefault(); useItem(selectedItem); }
       return;
     }
     if (e.key==='Enter' && document.getElementById('inputRow').classList.contains('show')) {
