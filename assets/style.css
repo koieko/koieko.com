@@ -70,6 +70,7 @@ nav{position:fixed;top:0;left:0;right:0;z-index:100;padding:16px 48px;display:fl
 
 /* ---- ページ共通の上部余白（固定ナビ分） ---- */
 .page-top{padding-top:72px;}
+.page-top > .wrap > .label:first-child{padding-top:16px;}
 
 /* ---- ヒーロー（TOP：左テキスト／右に画像を背景的に溶け込ませる） ---- */
 .hero{min-height:100vh;position:relative;overflow:hidden;display:flex;align-items:flex-end;}
@@ -103,7 +104,7 @@ nav{position:fixed;top:0;left:0;right:0;z-index:100;padding:16px 48px;display:fl
 }
 
 /* ---- セクション見出し ---- */
-.label{display:flex;align-items:baseline;gap:14px;padding:80px 0 22px;}
+.label{display:flex;align-items:baseline;gap:14px;padding:40px 0 22px;}
 .label .idx{font-size:.7rem;letter-spacing:.18em;color:var(--sepia);font-weight:500;}
 .label h2{font-family:var(--display);font-size:1.4rem;font-weight:500;letter-spacing:.04em;}
 
