@@ -1,0 +1,136 @@
+<!DOCTYPE html>
+<html lang="ja">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+<meta name="color-scheme" content="light only">
+<title>Tilt Proto — Like Chameleon</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Shippori+Mincho:wght@400;500&display=swap" rel="stylesheet">
+<style>
+  :root{ --paper:#f7f5f0; --ink:#1a1814; --ink2:#8a8780; --sepia:#6f5a42; --display:'Shippori Mincho',serif; }
+  *{margin:0;padding:0;box-sizing:border-box;}
+  html,body{height:100%;}
+  body{
+    background:var(--paper);color:var(--ink);
+    font-family:var(--display);
+    display:flex;flex-direction:column;align-items:center;justify-content:center;
+    min-height:100dvh;gap:6vh;padding:24px;overflow:hidden;
+    -webkit-tap-highlight-color:transparent;
+  }
+
+  .stage{position:relative;width:min(78vw,440px);aspect-ratio:1/1;}
+  .stage img{
+    position:absolute;inset:0;width:100%;height:100%;object-fit:contain;
+    mix-blend-mode:multiply;will-change:opacity;user-select:none;-webkit-user-drag:none;
+  }
+
+  .cap{text-align:center;line-height:2;}
+  .cap .ttl{font-size:.7rem;letter-spacing:.2em;text-transform:uppercase;color:var(--sepia);}
+  .cap .hint{font-size:1rem;font-weight:500;letter-spacing:.04em;}
+  .cap .sub{font-size:.78rem;color:var(--ink2);letter-spacing:.04em;}
+
+  /* 傾き量メーター（デバッグ兼演出） */
+  .meter{width:min(70vw,360px);height:2px;background:rgba(26,24,20,.12);position:relative;border-radius:2px;}
+  .meter i{position:absolute;top:50%;left:50%;width:10px;height:10px;border-radius:50%;background:var(--ink);transform:translate(-50%,-50%);transition:left .08s linear;}
+
+  /* iOS 許可ボタン */
+  .ask{position:fixed;inset:0;display:flex;flex-direction:column;align-items:center;justify-content:center;gap:24px;background:var(--paper);text-align:center;padding:32px;}
+  .ask.hide{display:none;}
+  .ask p{font-size:.9rem;font-weight:400;line-height:2;color:var(--ink2);}
+  .ask button{font-family:inherit;font-size:.82rem;letter-spacing:.12em;text-transform:uppercase;color:var(--paper);background:var(--ink);border:none;border-radius:2px;padding:14px 48px;cursor:pointer;}
+
+  .back{position:fixed;top:18px;left:20px;font-size:.78rem;letter-spacing:.06em;color:var(--ink2);text-decoration:none;}
+  .back:hover{color:var(--ink);}
+</style>
+</head>
+<body>
+
+<a class="back" href="/">← Home</a>
+
+<div class="stage">
+  <img id="la" src="chameleon_a.jpg" alt="本を読むカメレオン（集中）">
+  <img id="lb" src="chameleon_b.jpg" alt="">
+  <img id="lc" src="chameleon_c.jpg" alt="">
+</div>
+
+<div class="meter"><i id="dot"></i></div>
+
+<div class="cap">
+  <p class="ttl">Tilt / Hover</p>
+  <p class="hint" id="hint">端末を傾けてみて</p>
+  <p class="sub">傾けるほど、本に酔っていく</p>
+</div>
+
+<!-- iOS 用の許可（必要な端末だけ表示） -->
+<div class="ask hide" id="ask">
+  <p>このデモは、スマートフォンを<br>傾けると絵が変化します。</p>
+  <button type="button" id="askok">はじめる</button>
+</div>
+
+<script>
+(function(){
+  const la=document.getElementById('la'),
+        lb=document.getElementById('lb'),
+        lc=document.getElementById('lc'),
+        dot=document.getElementById('dot'),
+        hint=document.getElementById('hint');
+
+  const clamp=(v,a,b)=>Math.max(a,Math.min(b,v));
+
+  // pos: 0(=a) 〜 2(=c) を受け取り、3枚の不透明度を線形補間で配分
+  let cur=0, tgt=0;
+  function paint(pos){
+    let oa,ob,oc;
+    if(pos<1){ oa=1-pos; ob=pos; oc=0; }
+    else     { oa=0; ob=2-pos; oc=pos-1; }
+    la.style.opacity=oa; lb.style.opacity=ob; lc.style.opacity=oc;
+    dot.style.left=(pos/2*100)+'%';
+  }
+  paint(0);
+
+  // 目標値へなめらかに追従
+  (function loop(){
+    cur+=(tgt-cur)*0.12;
+    paint(cur);
+    requestAnimationFrame(loop);
+  })();
+
+  const fine=window.matchMedia('(hover:hover) and (pointer:fine)').matches;
+
+  function startTilt(){
+    window.addEventListener('deviceorientation',e=>{
+      const ag=clamp(Math.abs(e.gamma||0),0,45);  // 左右どちらの傾きでも
+      tgt=ag/45*2;                                  // 0〜2 にマップ
+    });
+  }
+
+  if(fine){
+    // PC：マウスを左右に動かす（中央=a、端=c）
+    hint.textContent='マウスを左右に動かして';
+    window.addEventListener('mousemove',e=>{
+      const r=Math.abs(e.clientX/Math.max(1,innerWidth)*2-1); // 中央0〜端1
+      tgt=r*2;
+    });
+  }else{
+    const D=window.DeviceOrientationEvent;
+    const needPerm=typeof D!=='undefined'&&typeof D.requestPermission==='function';
+    if(needPerm){
+      const ask=document.getElementById('ask');
+      ask.classList.remove('hide');
+      document.getElementById('askok').addEventListener('click',function(){
+        this.disabled=true;
+        Promise.resolve().then(()=>D.requestPermission())
+          .then(s=>{ if(s==='granted')startTilt(); })
+          .catch(()=>{})
+          .then(()=>ask.classList.add('hide'));
+      },{once:true});
+    }else{
+      startTilt();
+    }
+  }
+})();
+</script>
+</body>
+</html>

@@ -41,7 +41,7 @@
     if(!showPrompt){ setTimeout(finish,260); return; }
     const box=document.createElement('div');
     box.className='ld-ask';
-    box.innerHTML='<p class="ld-ask-txt">このサイトでは、スマートフォンを傾けると<br>一部の表示が変化します。</p><button type="button" class="ld-ask-ok">OK</button>';
+    box.innerHTML='<p class="ld-ask-txt">このサイトでは、<br>スマートフォンを傾けると<br>一部の表示が変化します。</p><button type="button" class="ld-ask-ok">OK</button>';
     l.appendChild(box);
     requestAnimationFrame(()=>box.classList.add('show'));
     box.querySelector('.ld-ask-ok').addEventListener('click',function(){
