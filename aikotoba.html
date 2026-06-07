@@ -1,0 +1,359 @@
+<!DOCTYPE html>
+<html lang="ja">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<meta name="robots" content="noindex">
+<title>カメロン</title>
+<link rel="icon" href="favicon.svg" type="image/svg+xml">
+<link rel="icon" href="favicon.png" sizes="any">
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=DotGothic16&display=swap" rel="stylesheet">
+<style>
+* { box-sizing: border-box; margin: 0; padding: 0; }
+html, body { height: 100%; background: #000; }
+body {
+  color: #fff;
+  font-family: 'DotGothic16', monospace;
+  font-size: 14px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  height: 100vh;
+  padding: 16px;
+}
+.ut {
+  width: 100%;
+  max-width: 640px;
+  height: 100%;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+}
+
+/* カメレオン：上半分を使う */
+.ut-cham-wrap {
+  width: 100%;
+  flex: 1;
+  max-height: 50vh;
+  min-height: 0;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  background-color: #000;
+  background-image:
+    linear-gradient(rgba(0,255,0,0.25) 1px, transparent 1px),
+    linear-gradient(90deg, rgba(0,255,0,0.25) 1px, transparent 1px);
+  background-size: 120px 100px;
+  background-position: 60px 50px;
+}
+.ut-cham {
+  max-height: 38vh;
+  max-width: 60%;
+  width: auto;
+  height: auto;
+  object-fit: contain;
+  opacity: 0;
+  mix-blend-mode: screen;
+  transition: opacity 0.3s ease;
+  pointer-events: none;
+}
+.ut-cham.on { opacity: 1; }
+
+/* ダイアログ */
+.ut-dialog {
+  width: 100%;
+  border: 3px solid #fff;
+  background: #000;
+  margin: 12px 0 10px;
+  height: 96px;
+  flex-shrink: 0;
+  display: flex;
+  align-items: center;
+  padding: 0 20px;
+  overflow: hidden;
+}
+.ut-dialog-inner { width: 100%; }
+
+.ut-plain {
+  font-size: 14px;
+  line-height: 1.85;
+  color: #fff;
+  white-space: pre-wrap;
+}
+.ut-cursor {
+  display: inline-block;
+  width: 10px;
+  height: 14px;
+  background: #fff;
+  margin-left: 2px;
+  vertical-align: middle;
+  animation: blink 0.8s step-end infinite;
+}
+@keyframes blink { 50% { opacity: 0; } }
+
+.ut-choices { display: flex; flex-direction: column; gap: 2px; }
+.ut-choice {
+  font-size: 14px;
+  line-height: 1.85;
+  color: #fff;
+  display: flex;
+  align-items: center;
+  gap: 4px;
+  cursor: pointer;
+}
+.ut-choice .heart { color: #e00; visibility: hidden; width: 16px; flex-shrink: 0; }
+.ut-choice.selected .heart { visibility: visible; }
+
+/* ボタン */
+.ut-bottom { width: 100%; flex-shrink: 0; display: flex; flex-direction: column; gap: 8px; }
+.ut-buttons { display: grid; grid-template-columns: repeat(4, 1fr); gap: 6px; }
+.ut-btn {
+  font-family: 'DotGothic16', monospace;
+  font-size: 13px;
+  color: #fff;
+  background: #000;
+  border: 2.5px solid #f5a623;
+  border-radius: 2px;
+  padding: 9px 4px;
+  cursor: pointer;
+  text-align: center;
+  transition: background 0.15s, color 0.15s;
+  white-space: nowrap;
+}
+.ut-btn:hover, .ut-btn.active { background: #f5a623; color: #000; }
+.ut-btn:disabled { opacity: 0.3; cursor: default; pointer-events: none; }
+
+.ut-input-row { display: none; align-items: center; gap: 8px; padding: 4px 0 0; }
+.ut-input-row.show { display: flex; }
+.ut-heart-icon { color: #fff; font-size: 14px; flex-shrink: 0; }
+.ut-input {
+  flex: 1;
+  font-family: 'DotGothic16', monospace;
+  font-size: 14px;
+  color: #fff;
+  background: #000;
+  border: none;
+  border-bottom: 2px solid #fff;
+  padding: 4px 0;
+  outline: none;
+}
+.ut-input::placeholder { color: #444; }
+.ut-enter {
+  font-family: 'DotGothic16', monospace;
+  font-size: 12px;
+  color: #000;
+  background: #fff;
+  border: none;
+  padding: 7px 14px;
+  cursor: pointer;
+  flex-shrink: 0;
+}
+.ut-enter:hover { opacity: 0.75; }
+
+.shake { animation: shake 0.35s ease; }
+@keyframes shake {
+  0%,100%{transform:translateX(0)}
+  20%{transform:translateX(-5px)}
+  40%{transform:translateX(5px)}
+  60%{transform:translateX(-4px)}
+  80%{transform:translateX(4px)}
+}
+@media(max-width:480px){ .ut-btn { font-size: 11px; padding: 8px 2px; } }
+</style>
+</head>
+<body>
+<div class="ut">
+
+  <div class="ut-cham-wrap">
+    <img class="ut-cham on" id="cA" src="cameleon_e.png" alt="">
+  </div>
+
+  <div class="ut-dialog" id="dialog">
+    <div class="ut-dialog-inner" id="dinner"></div>
+  </div>
+
+  <div class="ut-bottom">
+    <div class="ut-buttons">
+      <button class="ut-btn" id="btnAct"   onclick="doAct()">❤ こうどう</button>
+      <button class="ut-btn" id="btnFight" onclick="doOther('FIGHT')">⚔ たたかう</button>
+      <button class="ut-btn" id="btnItem"  onclick="doOther('ITEM')">✦ アイテム</button>
+      <button class="ut-btn" id="btnMercy" onclick="doMercy()">☆ みのがす</button>
+    </div>
+    <div class="ut-input-row" id="inputRow">
+      <span class="ut-heart-icon">❤</span>
+      <input class="ut-input" id="passInput" type="text" placeholder="合言葉を入力...">
+      <button class="ut-enter" onclick="checkPass()">ENTER</button>
+    </div>
+  </div>
+
+</div>
+<script>
+  const PASS = 'ハローワールド';
+  const DEST = 'https://toolbox.koieko.com';
+  let ignores = 0, frozen = false, wrongCount = 0;
+  let mercyMode = false, selectedChoice = 0;
+
+  function setPlain(t) {
+    mercyMode = false;
+    document.getElementById('dinner').innerHTML =
+      '<div class="ut-plain">' + t + '<span class="ut-cursor"></span></div>';
+  }
+
+  function setChoices() {
+    mercyMode = true;
+    selectedChoice = 0;
+    document.getElementById('dinner').innerHTML =
+      '<div class="ut-choices">' +
+        '<div class="ut-choice selected" id="ch0" onclick="clickChoice(0)">' +
+          '<span class="heart">❤</span><span>❋ koieko.com にもどる</span>' +
+        '</div>' +
+        '<div class="ut-choice" id="ch1" onclick="clickChoice(1)">' +
+          '<span class="heart">❤</span><span>❋ このままとどまる</span>' +
+        '</div>' +
+      '</div>';
+  }
+
+  function selectChoice(idx) {
+    selectedChoice = idx;
+    document.querySelectorAll('.ut-choice').forEach((el,i) => {
+      el.classList.toggle('selected', i===idx);
+    });
+  }
+
+  function clickChoice(idx) {
+    selectChoice(idx);
+    setTimeout(() => confirmChoice(), 100);
+  }
+
+  function confirmChoice() {
+    if (selectedChoice === 0) {
+      window.location.href = 'https://koieko.com';
+    } else {
+      mercyMode = false;
+      document.querySelectorAll('.ut-btn').forEach(b => b.classList.remove('active'));
+      setPlain('カメロン は\nじっと あなたを 見ている。');
+    }
+  }
+
+  function hideInputRow() {
+    document.getElementById('inputRow').classList.remove('show');
+  }
+
+  function doAct() {
+    if (frozen) { setPlain('......\nページをめくる音だけがする。'); hideInputRow(); return; }
+    document.querySelectorAll('.ut-btn').forEach(b => b.classList.remove('active'));
+    document.getElementById('btnAct').classList.add('active');
+    hideInputRow();
+    document.getElementById('inputRow').classList.add('show');
+    setPlain('合言葉を言ってみる。');
+    document.getElementById('passInput').focus();
+  }
+
+  const fightTexts = ['そんなことをしたらページが消えてしまう。','まだやるのか。'];
+  let fightIdx = 0;
+  let itemMode = false;
+  let selectedItem = 0;
+
+  function setItemChoices() {
+    itemMode = true;
+    selectedItem = 0;
+    document.getElementById('dinner').innerHTML =
+      '<div class="ut-choices">' +
+        '<div class="ut-choice selected" id="it0" onclick="clickItem(0)">' +
+          '<span class="heart">❤</span><span>❋ 使いかけのアイデア</span>' +
+        '</div>' +
+        '<div class="ut-choice" id="it1" onclick="clickItem(1)">' +
+          '<span class="heart">❤</span><span>❋ しおり</span>' +
+        '</div>' +
+      '</div>';
+  }
+
+  function selectItem(idx) {
+    selectedItem = idx;
+    document.querySelectorAll('.ut-choice').forEach((el,i) => {
+      el.classList.toggle('selected', i===idx);
+    });
+  }
+
+  function clickItem(idx) {
+    selectItem(idx);
+    setTimeout(() => useItem(idx), 100);
+  }
+
+  function useItem(idx) {
+    itemMode = false;
+    if (idx === 0) {
+      setPlain('使いかけのアイデア を 使った。\n合言葉を 知っていれば\n秘密の世界へ 移動できる。');
+    } else {
+      setPlain('しおり を 使おうとした。\n……まだ 読み始めたばかりだ。\n今は 使えそうにない。');
+    }
+  }
+
+  function doOther(action) {
+    document.querySelectorAll('.ut-btn').forEach(b => b.classList.remove('active'));
+    hideInputRow();
+    itemMode = false;
+
+    if (action === 'ITEM') {
+      document.getElementById('btnItem').classList.add('active');
+      setItemChoices();
+      return;
+    }
+
+    if (frozen) { setPlain('......\nカメロンはもうこちらを見ていない。'); return; }
+
+    if (action === 'FIGHT') {
+      ignores++;
+      const msg = fightTexts[Math.min(fightIdx, fightTexts.length-1)];
+      fightIdx++;
+      if (ignores===1) { setPlain(msg); }
+      else { frozen=true; setPlain('......\nカメロンは本のページをめくった。\nもうこちらを見ていない。'); }
+    }
+  }
+
+  function doMercy() {
+    document.querySelectorAll('.ut-btn').forEach(b => b.classList.remove('active'));
+    document.getElementById('btnMercy').classList.add('active');
+    hideInputRow();
+    setChoices();
+  }
+
+  function checkPass() {
+    const val = document.getElementById('passInput').value.trim();
+    if (val===PASS) {
+      setPlain('...\nそうか。通れ。');
+      hideInputRow();
+      document.querySelectorAll('.ut-btn').forEach(b => { b.disabled=true; });
+      setTimeout(() => { window.location.href = DEST; }, 1200);
+    } else {
+      wrongCount++;
+      const msgs = ['ちがう。もう一度思い出せ。','それではない。','まだわからないのか。'];
+      setPlain(msgs[Math.min(wrongCount-1, 2)]);
+      const d = document.getElementById('dialog');
+      d.classList.remove('shake'); void d.offsetWidth; d.classList.add('shake');
+      document.getElementById('passInput').value = '';
+    }
+  }
+
+  document.addEventListener('keydown', e => {
+    if (mercyMode) {
+      if (e.key==='ArrowUp' || e.key==='ArrowDown') { e.preventDefault(); selectChoice((selectedChoice+1)%2); }
+      if (e.key==='Enter' || e.key==='z' || e.key==='Z') { e.preventDefault(); confirmChoice(); }
+      return;
+    }
+    if (itemMode) {
+      if (e.key==='ArrowUp' || e.key==='ArrowDown') { e.preventDefault(); selectItem((selectedItem+1)%2); }
+      if (e.key==='Enter' || e.key==='z' || e.key==='Z') { e.preventDefault(); useItem(selectedItem); }
+      return;
+    }
+    if (e.key==='Enter' && document.getElementById('inputRow').classList.contains('show')) {
+      checkPass();
+    }
+  });
+
+  setPlain('カメロン は\nじっと あなたを 見ている。');
+</script>
+</body>
+</html>
